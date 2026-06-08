@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="rem">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>rem</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+:root{--black:#0a0a0a;--white:#f8f8f6;--mid:#888;--light:#e8e8e6;--safe-top:env(safe-area-inset-top,44px);--safe-bottom:env(safe-area-inset-bottom,20px);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--white);color:var(--black);font-family:'DM Sans',sans-serif;font-size:15px;overscroll-behavior:none;}
+#app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;}
+header{padding:calc(var(--safe-top) + 16px) 24px 14px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1.5px solid var(--black);flex-shrink:0;}
+.wordmark{font-family:'DM Mono',monospace;font-size:26px;font-weight:300;letter-spacing:-0.5px;line-height:1;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.my-rank-pill{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.5px;border:1px solid var(--black);padding:3px 8px;border-radius:20px;}
+.pts-badge{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;background:var(--black);color:var(--white);padding:4px 10px;border-radius:20px;}
+.pts-badge.pop{animation:ptsPop 0.4s ease;}
+@keyframes ptsPop{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+nav{display:flex;border-bottom:1.5px solid var(--black);flex-shrink:0;}
+nav button{flex:1;background:none;border:none;padding:14px 0;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--mid);cursor:pointer;border-right:1px solid var(--light);}
+nav button:last-child{border-right:none;}
+nav button.active{background:var(--black);color:var(--white);}
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.view{display:none;padding:0 0 calc(var(--safe-bottom) + 80px);}
+.view.active{display:block;}
+.sec-label{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--mid);padding:20px 24px 8px;}
+.date-header{padding:18px 24px 6px;display:flex;justify-content:space-between;align-items:baseline;}
+.date-header .day-word{font-family:'DM Mono',monospace;font-size:28px;font-weight:300;letter-spacing:-1px;}
+.date-header .date-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--mid);letter-spacing:1px;}
+.streak-bar{margin:0 24px 4px;display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:11px;color:var(--mid);}
+.streak-dots{display:flex;gap:4px;}
+.streak-dot{width:8px;height:8px;border-radius:50%;background:var(--light);transition:background 0.3s;}
+.streak-dot.filled{background:var(--black);}
+.topic-card{margin:8px 24px;border:1.5px solid var(--black);border-radius:2px;padding:16px 18px;position:relative;transition:background 0.2s;cursor:pointer;-webkit-user-select:none;user-select:none;}
+.topic-card.done{background:var(--black);color:var(--white);}
+.topic-card.done .topic-sub{color:#aaa;}
+.topic-name{font-size:16px;font-weight:400;line-height:1.3;margin-bottom:6px;}
+.topic-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--mid);display:flex;gap:12px;flex-wrap:wrap;}
+.topic-pts{position:absolute;right:14px;top:14px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;opacity:0.35;}
+.topic-card.done .topic-pts{opacity:0.6;}
+.check-ring{position:absolute;right:14px;bottom:14px;width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0.35;}
+.topic-card.done .check-ring{opacity:1;}
+.empty{padding:48px 24px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--mid);line-height:2;letter-spacing:0.5px;}
+.score-strip{margin:12px 24px;border:1.5px solid var(--black);border-radius:2px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
+.score-strip .sc-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);}
+.score-strip .sc-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;}
+.prog-bar-wrap{margin:4px 24px 12px;height:2px;background:var(--light);border-radius:2px;overflow:hidden;}
+.prog-bar-fill{height:100%;background:var(--black);border-radius:2px;transition:width 0.5s ease;}
+.tomorrow-card{margin:6px 24px;border:1px solid var(--light);border-radius:2px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
+.tomorrow-card .tc-name{font-size:14px;font-weight:400;}
+.tomorrow-card .tc-meta{font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);letter-spacing:0.5px;margin-top:3px;}
+.tc-day-badge{font-family:'DM Mono',monospace;font-size:10px;border:1px solid var(--light);padding:3px 7px;border-radius:20px;color:var(--mid);white-space:nowrap;}
+.lb-my-card{margin:16px 24px 8px;border:1.5px solid var(--black);border-radius:2px;padding:18px 20px;display:flex;align-items:center;gap:14px;background:var(--black);color:var(--white);}
+.lb-my-rank-num{font-family:'DM Mono',monospace;font-size:32px;font-weight:300;line-height:1;min-width:36px;}
+.lb-my-info{flex:1;}
+.lb-my-name{font-size:17px;font-weight:400;}
+.lb-my-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-top:3px;}
+.lb-my-pts{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;}
+.lb-online-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:5px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.lb-row{margin:4px 24px;border:1px solid var(--light);border-radius:2px;padding:13px 16px;display:flex;align-items:center;gap:12px;}
+.lb-row.rank-1{border-color:var(--black);border-width:1.5px;}
+.lb-row.rank-2{border-color:#bbb;}
+.lb-row.rank-3{border-color:#ccc;}
+.lb-num{font-family:'DM Mono',monospace;font-size:18px;font-weight:300;min-width:28px;color:var(--mid);}
+.lb-row.rank-1 .lb-num{color:var(--black);font-weight:500;}
+.lb-name-wrap{flex:1;}
+.lb-name{font-size:15px;font-weight:400;}
+.lb-title-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-top:2px;}
+.lb-row.rank-1 .lb-title-tag{color:var(--black);font-weight:500;}
+.lb-pts-col{text-align:right;}
+.lb-pts-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;}
+.lb-pts-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--mid);letter-spacing:1px;margin-top:1px;}
+.lb-last-seen{font-family:'DM Mono',monospace;font-size:9px;color:var(--mid);margin-top:2px;}
+.lb-sync-status{margin:8px 24px;font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);letter-spacing:0.5px;display:flex;align-items:center;gap:6px;}
+.add-section{padding:20px 24px 0;}
+.field-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:8px;}
+input[type=text],input[type=date],input[type=time],select,textarea{width:100%;border:1.5px solid var(--black);border-radius:2px;background:var(--white);color:var(--black);font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 14px;outline:none;appearance:none;-webkit-appearance:none;margin-bottom:16px;}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 2px rgba(0,0,0,0.08);}
+textarea{min-height:60px;resize:none;}
+.interval-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.iv-chip{font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;border:1px solid var(--light);border-radius:20px;cursor:pointer;transition:all 0.15s;color:var(--mid);}
+.iv-chip.selected{background:var(--black);color:var(--white);border-color:var(--black);}
+.btn-primary{display:block;width:100%;background:var(--black);color:var(--white);border:none;border-radius:2px;padding:15px;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:4px;text-align:center;}
+.btn-primary:active{opacity:0.7;}
+.btn-secondary{display:block;width:100%;background:none;color:var(--black);border:1.5px solid var(--black);border-radius:2px;padding:13px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-top:8px;text-align:center;}
+.btn-secondary:active{background:var(--black);color:var(--white);}
+.notif-row{margin:8px 24px;border:1px solid var(--light);border-radius:2px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
+.notif-row .nr-label{font-size:14px;}
+.notif-row .nr-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);margin-top:3px;}
+.toggle{width:44px;height:26px;background:var(--light);border-radius:13px;position:relative;cursor:pointer;transition:background 0.25s;flex-shrink:0;border:none;}
+.toggle.on{background:var(--black);}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:var(--white);top:3px;left:3px;transition:transform 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle.on::after{transform:translateX(18px);}
+.all-row{margin:4px 24px;border-bottom:1px solid var(--light);padding:14px 0;display:flex;justify-content:space-between;align-items:flex-start;}
+.all-row:last-child{border-bottom:none;}
+.ar-name{font-size:15px;font-weight:400;margin-bottom:4px;}
+.ar-meta{font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);letter-spacing:0.5px;}
+.ar-del{background:none;border:1px solid var(--light);border-radius:2px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);cursor:pointer;flex-shrink:0;margin-left:12px;margin-top:2px;}
+.ar-del:active{background:var(--black);color:var(--white);border-color:var(--black);}
+#login-screen{position:fixed;inset:0;background:var(--white);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
+.login-logo{font-family:'DM Mono',monospace;font-size:48px;font-weight:300;letter-spacing:-2px;margin-bottom:8px;}
+.login-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--mid);letter-spacing:2px;text-transform:uppercase;margin-bottom:48px;}
+.login-field-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:8px;align-self:flex-start;width:100%;}
+#login-name{width:100%;border:1.5px solid var(--black);border-radius:2px;background:var(--white);color:var(--black);font-family:'DM Sans',sans-serif;font-size:18px;padding:14px 16px;outline:none;margin-bottom:16px;text-align:center;letter-spacing:1px;}
+.login-hint{font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);text-align:center;margin-top:12px;line-height:1.8;letter-spacing:0.3px;}
+#toast{position:fixed;bottom:calc(var(--safe-bottom) + 20px);left:50%;transform:translateX(-50%) translateY(80px);background:var(--black);color:var(--white);font-family:'DM Mono',monospace;font-size:12px;padding:10px 20px;border-radius:20px;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);z-index:1000;pointer-events:none;max-width:90vw;text-align:center;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#reward-flash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:999;opacity:0;transition:opacity 0.2s;}
+#reward-flash.show{opacity:1;}
+.reward-inner{font-family:'DM Mono',monospace;font-size:48px;font-weight:300;color:var(--black);text-align:center;line-height:1.1;}
+.reward-inner .rpts{display:block;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-top:4px;}
+.notif-note{margin:0 24px 16px;padding:14px 16px;background:var(--light);border-radius:2px;font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);line-height:1.8;}
+.notif-note strong{color:var(--black);}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-logo">rem</div>
+  <div class="login-sub">spaced repetition</div>
+  <div class="login-field-label">Your name</div>
+  <input type="text" id="login-name" placeholder="e.g. Karthik" autocomplete="off" autocorrect="off">
+  <button class="btn-primary" id="login-btn">ENTER</button>
+  <div class="login-hint">Your name is your ID.<br>Use the same name on every device.</div>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="wordmark">rem</div>
+    <div class="header-right">
+      <div class="my-rank-pill" id="my-rank-pill">—</div>
+      <div class="pts-badge" id="pts-badge">0 pts</div>
+    </div>
+  </header>
+
+  <nav id="main-nav">
+    <button class="active" data-tab="today">TODAY</button>
+    <button data-tab="tomorrow">NEXT</button>
+    <button data-tab="lb">RANKS</button>
+    <button data-tab="add">ADD</button>
+    <button data-tab="all">ALL</button>
+  </nav>
+
+  <main>
+
+    <!-- TODAY -->
+    <div id="view-today" class="view active">
+      <div class="date-header">
+        <span class="day-word" id="day-word">—</span>
+        <span class="date-num" id="date-num">—</span>
+      </div>
+      <div class="streak-bar">
+        <span>streak</span>
+        <div class="streak-dots" id="streak-dots"></div>
+        <span id="streak-count">0d</span>
+      </div>
+      <div class="prog-bar-wrap"><div class="prog-bar-fill" id="prog-bar" style="width:0%"></div></div>
+      <div id="score-strip"></div>
+      <div class="sec-label" id="today-label">DUE TODAY</div>
+      <div id="today-cards"></div>
+    </div>
+
+    <!-- NEXT -->
+    <div id="view-tomorrow" class="view">
+      <div class="sec-label">DUE TOMORROW</div>
+      <div id="tomorrow-cards"></div>
+      <div class="sec-label" style="margin-top:8px">UPCOMING (7 DAYS)</div>
+      <div id="upcoming-cards"></div>
+    </div>
+
+    <!-- RANKS -->
+    <div id="view-lb" class="view">
+      <div id="lb-my-card-wrap"></div>
+      <div class="lb-sync-status"><span class="lb-online-dot"></span><span id="lb-sync-text">connecting...</span></div>
+      <div class="sec-label">LEADERBOARD</div>
+      <div id="lb-list"></div>
+    </div>
+
+    <!-- ADD -->
+    <div id="view-add" class="view">
+      <div class="add-section">
+        <div class="field-label">Topic name</div>
+        <input type="text" id="add-name" placeholder="e.g. Fetal growth assessment">
+        <div class="field-label">Notes (optional)</div>
+        <textarea id="add-notes" placeholder="Chapter, source, keywords..."></textarea>
+        <div class="field-label">Start date</div>
+        <input type="date" id="add-date">
+        <div class="field-label">Repetition schedule</div>
+        <div class="interval-grid" id="interval-grid"></div>
+        <div class="field-label">Points per review</div>
+        <select id="add-pts">
+          <option value="5">5 pts — easy</option>
+          <option value="10" selected>10 pts — normal</option>
+          <option value="20">20 pts — hard</option>
+          <option value="50">50 pts — critical</option>
+        </select>
+        <button class="btn-primary" id="add-btn">+ ADD TOPIC</button>
+      </div>
+    </div>
+
+    <!-- ALL -->
+    <div id="view-all" class="view">
+      <div class="add-section" style="padding-bottom:12px">
+
+        <div class="field-label">Signed in as</div>
+        <div id="signed-in-name" style="font-family:'DM Mono',monospace;font-size:16px;font-weight:500;margin-bottom:16px;padding:12px 14px;border:1.5px solid var(--black);border-radius:2px">—</div>
+        <button class="btn-secondary" id="signout-btn" style="margin-top:0;margin-bottom:24px">SIGN OUT</button>
+
+        <div class="field-label">Notifications</div>
+        <div class="notif-row" style="margin:0 0 8px;border:1.5px solid var(--black);">
+          <div>
+            <div class="nr-label">Daily reminders</div>
+            <div class="nr-sub" id="notif-time-label">Tap to enable</div>
+          </div>
+          <button class="toggle" id="notif-toggle"></button>
+        </div>
+        <div class="field-label" style="margin-top:8px">First reminder at</div>
+        <input type="time" id="notif-time" value="08:00">
+        <div class="notif-row" style="margin:0 0 16px;border:1px solid var(--light);">
+          <div>
+            <div class="nr-label" style="font-size:13px">3 reminders per day</div>
+            <div class="nr-sub" id="notif-times-preview">08:00 · 13:00 · 18:00</div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="test-notif-btn" style="margin-bottom:16px">TEST NOTIFICATION</button>
+
+        <div class="notif-note">
+          <strong>Background notifications on iOS</strong><br>
+          Works when app is open or backgrounded.<br>
+          Do not swipe the app away — press Home instead.<br>
+          On Android it works fully even when closed.
+        </div>
+
+      </div>
+      <div class="sec-label">ALL TOPICS <span id="all-count" style="color:var(--mid)"></span></div>
+      <div id="all-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+<div id="reward-flash">
+  <div class="reward-inner">
+    <span id="rf-pts">+10</span>
+    <span class="rpts">pts earned</span>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDJ5B3V6fL2qcPxeGCwt6yPEoLLMGTqJY0",
+  authDomain:"remm-9fa06.firebaseapp.com",
+  projectId:"remm-9fa06",
+  storageBucket:"remm-9fa06.firebasestorage.app",
+  messagingSenderId:"1079860308431",
+  appId:"1:1079860308431:web:d99e155925a7deb0ef4aba",
+  databaseURL:"https://remm-9fa06-default-rtdb.firebaseio.com"
+});
+var fbdb = firebase.database();
+
+var LOCAL_KEY = 'rem_local_v3';
+var DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var myName = '';
+var localData = {topics:[],points:0,streak:0,lastDay:null};
+var selectedIntervals = [0,1,3,7,14,28,90];
+var allPlayers = [];
+
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function addDays(s,n){var d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
+function daysFromToday(s){return Math.round((new Date(s)-new Date(todayStr()))/86400000);}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(LOCAL_KEY))||{topics:[],points:0,streak:0,lastDay:null};}catch(e){return{topics:[],points:0,streak:0,lastDay:null};}}
+function saveLocal(){localStorage.setItem(LOCAL_KEY,JSON.stringify(localData));}
+
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(function(){el.classList.remove('show');},2500);
+}
+
+function showReward(pts){
+  var f=document.getElementById('reward-flash');
+  document.getElementById('rf-pts').textContent='+'+pts;
+  f.classList.add('show');
+  setTimeout(function(){f.classList.remove('show');},900);
+}
+
+function updatePtsBadge(animate){
+  var b=document.getElementById('pts-badge');
+  b.textContent=(localData.points||0)+' pts';
+  if(animate){b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');}
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  document.querySelectorAll('#main-nav button').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelectorAll('#main-nav button').forEach(function(b){if(b.dataset.tab===tab)b.classList.add('active');});
+  if(tab==='all')renderAll();
+  if(tab==='tomorrow')renderTomorrow();
+  if(tab==='lb')renderLeaderboard();
+}
+
+function pushToFirebase(){
+  if(!myName)return;
+  fbdb.ref('users/'+myName).set({name:myName,points:localData.points||0,streak:localData.streak||0,lastSeen:Date.now()});
+}
+
+function listenLeaderboard(){
+  fbdb.ref('users').on('value',function(snap){
+    var data=snap.val()||{};
+    allPlayers=Object.values(data).sort(function(a,b){return(b.points||0)-(a.points||0);});
+    renderLeaderboard();
+    updateMyRankPill();
+    document.getElementById('lb-sync-text').textContent='live · '+allPlayers.length+' player'+(allPlayers.length!==1?'s':'');
+  });
+}
+
+function getTitleForPosition(pos,pts){
+  if(pos===0)return'Radiant';
+  if(pos===1)return'Immortal';
+  if(pos===2)return'Ascendant';
+  if(pts>=1000)return'Diamond';
+  if(pts>=500)return'Platinum';
+  if(pts>=300)return'Gold';
+  if(pts>=150)return'Silver';
+  if(pts>=50)return'Bronze';
+  return'Unranked';
+}
+
+function timeAgo(ts){
+  if(!ts)return'';
+  var s=Math.floor((Date.now()-ts)/1000);
+  if(s<60)return'just now';
+  if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function doLogin(){
+  var val=document.getElementById('login-name').value.trim();
+  if(!val){toast('Enter your name');return;}
+  myName=val;
+  localStorage.setItem('rem_username',myName);
+  fbdb.ref('users/'+myName).once('value').then(function(snap){
+    if(snap.exists()){
+      var remote=snap.val();
+      if((remote.points||0)>(localData.points||0)){localData.points=remote.points;localData.streak=remote.streak||localData.streak;saveLocal();}
+    }
+    showApp();
+  }).catch(function(){showApp();});
+}
+
+function signOut(){localStorage.removeItem('rem_username');location.reload();}
+
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('signed-in-name').textContent=myName;
+  initApp();
+}
+
+function initApp(){
+  var now=new Date();
+  document.getElementById('day-word').textContent=DAYS[now.getDay()];
+  document.getElementById('date-num').textContent=now.getDate()+' '+MONTHS[now.getMonth()]+' '+now.getFullYear();
+  document.getElementById('add-date').value=todayStr();
+  buildIntervalChips();
+  updateStreak();
+  renderToday();
+  renderTomorrow();
+  renderAll();
+  updatePtsBadge(false);
+  updateMyRankPill();
+  pushToFirebase();
+  listenLeaderboard();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
+  var notifOn=localStorage.getItem('rem_notif')==='1';
+  if(notifOn){
+    document.getElementById('notif-toggle').classList.add('on');
+    var t=localStorage.getItem('rem_notif_time')||'08:00';
+    document.getElementById('notif-time').value=t;
+    updateNotifPreview(t);
+    scheduleAllNotifs();
+  }
+}
+
+function updateStreak(){
+  var today=todayStr(),yesterday=addDays(today,-1);
+  if(localData.lastDay&&localData.lastDay<yesterday){localData.streak=0;saveLocal();}
+  var dots=document.getElementById('streak-dots');
+  dots.innerHTML='';
+  for(var i=0;i<7;i++){var d=document.createElement('div');d.className='streak-dot'+(i<Math.min(localData.streak,7)?' filled':'');dots.appendChild(d);}
+  document.getElementById('streak-count').textContent=(localData.streak||0)+'d';
+}
+
+function getNextDue(t){if(!t.reviews||t.reviews.length===0)return t.startDate;var rep=t.reviews.length;if(rep>=t.intervals.length)return null;return addDays(t.reviews[t.reviews.length-1],t.intervals[rep]);}
+function getCurrentRep(t){return t.reviews?t.reviews.length:0;}
+function intervalLabel(d){if(d===0)return'day 0';if(d===1)return'+1d';if(d<30)return'+'+d+'d';return'+'+Math.round(d/30)+'mo';}
+
+function renderToday(){
+  var today=todayStr();
+  var due=localData.topics.filter(function(t){var n=getNextDue(t);return n&&n<=today;});
+  var doneToday=due.filter(function(t){return t.completedDates&&t.completedDates.includes(today);});
+  var total=due.length,done=doneToday.length;
+  document.getElementById('score-strip').innerHTML=total>0?'<div class="score-strip"><div><div class="sc-label">Progress</div></div><div class="sc-val">'+done+' <span style="font-size:14px;color:var(--mid)">/ '+total+'</span></div></div>':'';
+  document.getElementById('prog-bar').style.width=(total>0?Math.round(done/total*100):0)+'%';
+  document.getElementById('today-label').textContent='DUE TODAY — '+total+' topic'+(total!==1?'s':'');
+  var container=document.getElementById('today-cards');
+  if(total===0){container.innerHTML='<div class="empty">no reviews due today<br>—<br>add topics to begin</div>';return;}
+  container.innerHTML='';
+  due.forEach(function(t){
+    var isDone=t.completedDates&&t.completedDates.includes(today);
+    var rep=getCurrentRep(t);
+    var card=document.createElement('div');
+    card.className='topic-card'+(isDone?' done':'');
+    card.innerHTML='<div class="topic-name">'+t.name+'</div>'
+      +'<div class="topic-sub"><span>rep '+(rep+1)+'</span><span>'+intervalLabel(t.intervals[rep]||0)+'</span>'
+      +(t.notes?'<span style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.notes+'</span>':'')
+      +'</div><div class="topic-pts">'+t.pts+'pt</div><div class="check-ring">'+(isDone?'&#10003;':'')+'</div>';
+    if(!isDone){(function(id){card.addEventListener('click',function(){completeTopic(id);});})(t.id);}
+    container.appendChild(card);
+  });
+  if(total>0&&done===total&&localData.lastDay!==today){
+    localData.lastDay=today;localData.streak=(localData.streak||0)+1;
+    saveLocal();pushToFirebase();updateStreak();
+    setTimeout(function(){toast('All done! Streak +1');},500);
+  }
+}
+
+function completeTopic(id){
+  var today=todayStr();
+  var t=localData.topics.find(function(x){return x.id===id;});
+  if(!t)return;
+  if(!t.reviews)t.reviews=[];
+  if(!t.completedDates)t.completedDates=[];
+  if(t.completedDates.includes(today))return;
+  t.reviews.push(today);t.completedDates.push(today);
+  localData.points=(localData.points||0)+t.pts;
+  saveLocal();pushToFirebase();
+  showReward(t.pts);updatePtsBadge(true);
+  renderToday();renderTomorrow();
+}
+
+function renderTomorrow(){
+  var tomorrow=addDays(todayStr(),1);
+  var dueTomorrow=localData.topics.filter(function(t){return getNextDue(t)===tomorrow;});
+  var tCont=document.getElementById('tomorrow-cards');
+  tCont.innerHTML=dueTomorrow.length===0?'<div class="empty">nothing due tomorrow</div>':dueTomorrow.map(function(t){return'<div class="tomorrow-card"><div><div class="tc-name">'+t.name+'</div><div class="tc-meta">rep '+(getCurrentRep(t)+1)+' &middot; '+t.pts+'pt</div></div><div class="tc-day-badge">tomorrow</div></div>';}).join('');
+  var upcoming=[];
+  for(var i=2;i<=7;i++){var d=addDays(todayStr(),i);localData.topics.filter(function(t){return getNextDue(t)===d;}).forEach(function(t){upcoming.push({t:t,d:d,i:i});});}
+  var uCont=document.getElementById('upcoming-cards');
+  uCont.innerHTML=upcoming.length===0?'<div class="empty">clear for 7 days</div>':upcoming.map(function(u){return'<div class="tomorrow-card"><div><div class="tc-name">'+u.t.name+'</div><div class="tc-meta">rep '+(getCurrentRep(u.t)+1)+' &middot; '+u.t.pts+'pt &middot; '+new Date(u.d).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'</div></div><div class="tc-day-badge">in '+u.i+' days</div></div>';}).join('');
+}
+
+function renderLeaderboard(){
+  var myPts=localData.points||0;
+  var myPos=allPlayers.findIndex(function(p){return p.name===myName;});
+  var myTitle=getTitleForPosition(myPos>=0?myPos:allPlayers.length,myPts);
+  document.getElementById('lb-my-card-wrap').innerHTML='<div class="lb-my-card"><div class="lb-my-rank-num">#'+(myPos>=0?myPos+1:'?')+'</div><div class="lb-my-info"><div class="lb-my-name">'+myName+'</div><div class="lb-my-title">'+myTitle+'</div></div><div class="lb-my-pts">'+myPts+'<span style="font-size:12px;color:#aaa"> pts</span></div></div>';
+  var list=document.getElementById('lb-list');
+  if(allPlayers.length===0){list.innerHTML='<div class="empty">no players yet<br>share the app link with friends</div>';return;}
+  list.innerHTML=allPlayers.map(function(p,i){
+    var title=getTitleForPosition(i,p.points||0);
+    var sc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    var isMe=p.name===myName;
+    return'<div class="lb-row '+sc+'"><div class="lb-num">'+(i+1)+'</div><div class="lb-name-wrap"><div class="lb-name">'+p.name+(isMe?' <span style="font-size:10px;color:var(--mid)">(you)</span>':'')+'</div><div class="lb-title-tag">'+title+'</div><div class="lb-last-seen">'+timeAgo(p.lastSeen)+'</div></div><div class="lb-pts-col"><div class="lb-pts-val">'+(p.points||0)+'</div><div class="lb-pts-label">pts</div></div></div>';
+  }).join('');
+}
+
+function updateMyRankPill(){
+  var myPts=localData.points||0;
+  var myPos=allPlayers.findIndex(function(p){return p.name===myName;});
+  document.getElementById('my-rank-pill').textContent=getTitleForPosition(myPos>=0?myPos:allPlayers.length,myPts);
+}
+
+function buildIntervalChips(){
+  var grid=document.getElementById('interval-grid');grid.innerHTML='';
+  var presets=[{label:'0-1-3-7-14-28-90',vals:[0,1,3,7,14,28,90]},{label:'0-1-7-30-90',vals:[0,1,7,30,90]},{label:'0-3-7-14-30',vals:[0,3,7,14,30]},{label:'custom',vals:null}];
+  presets.forEach(function(p,i){
+    var chip=document.createElement('div');chip.className='iv-chip'+(i===0?' selected':'');chip.textContent=p.label;
+    chip.addEventListener('click',function(){
+      document.querySelectorAll('.iv-chip').forEach(function(c){c.classList.remove('selected');});chip.classList.add('selected');
+      if(p.vals){selectedIntervals=p.vals.slice();}else{var c=prompt('Intervals in days, comma-separated\ne.g. 0,1,3,7,14,28,90');if(c)selectedIntervals=c.split(',').map(function(x){return parseInt(x.trim());}).filter(function(n){return!isNaN(n);});}
+    });
+    grid.appendChild(chip);
+  });
+}
+
+function addTopic(){
+  var name=document.getElementById('add-name').value.trim();
+  if(!name){toast('Enter a topic name');return;}
+  var date=document.getElementById('add-date').value||todayStr();
+  var notes=document.getElementById('add-notes').value.trim();
+  var pts=parseInt(document.getElementById('add-pts').value);
+  localData.topics.push({id:Date.now().toString(),name:name,notes:notes,startDate:date,intervals:selectedIntervals.slice(),pts:pts,reviews:[],completedDates:[],created:todayStr()});
+  saveLocal();
+  document.getElementById('add-name').value='';document.getElementById('add-notes').value='';document.getElementById('add-date').value=todayStr();
+  renderToday();renderTomorrow();renderAll();
+  toast('"'+name+'" added');switchTab('today');
+}
+
+function renderAll(){
+  document.getElementById('all-count').textContent='('+localData.topics.length+')';
+  var list=document.getElementById('all-list');
+  if(localData.topics.length===0){list.innerHTML='<div class="empty">no topics yet</div>';return;}
+  var sorted=localData.topics.slice().sort(function(a,b){var na=getNextDue(a)||'9999',nb=getNextDue(b)||'9999';return na<nb?-1:na>nb?1:0;});
+  list.innerHTML='';
+  sorted.forEach(function(t){
+    var next=getNextDue(t),dl=next?daysFromToday(next):null;
+    var dueLabel=next?(dl<0?'overdue '+(-dl)+'d':dl===0?'today':dl===1?'tomorrow':'in '+dl+'d'):'completed';
+    var row=document.createElement('div');row.className='all-row';
+    row.innerHTML='<div><div class="ar-name">'+t.name+'</div><div class="ar-meta">'+dueLabel+' &middot; rep '+getCurrentRep(t)+'/'+t.intervals.length+' &middot; '+t.pts+'pt</div></div>';
+    var del=document.createElement('button');del.className='ar-del';del.textContent='del';
+    (function(id){del.addEventListener('click',function(){deleteTopic(id);});})(t.id);
+    row.appendChild(del);list.appendChild(row);
+  });
+}
+
+function deleteTopic(id){localData.topics=localData.topics.filter(function(t){return t.id!==id;});saveLocal();renderToday();renderTomorrow();renderAll();toast('Topic removed');}
+
+function toggleNotif(){
+  var tog=document.getElementById('notif-toggle');
+  var isOn=tog.classList.contains('on');
+  if(!isOn){
+    if(!('Notification' in window)){toast('Notifications not supported');return;}
+    Notification.requestPermission().then(function(perm){
+      if(perm!=='granted'){toast('Allow notifications in Settings');return;}
+      tog.classList.add('on');localStorage.setItem('rem_notif','1');
+      var t=document.getElementById('notif-time').value;
+      updateNotifPreview(t);scheduleAllNotifs();toast('Reminders enabled');
+    });
+  }else{
+    tog.classList.remove('on');localStorage.setItem('rem_notif','0');
+    clearAllNotifTimers();document.getElementById('notif-time-label').textContent='Tap to enable';toast('Reminders off');
+  }
+}
+
+function saveNotifTime(){
+  var t=document.getElementById('notif-time').value;
+  localStorage.setItem('rem_notif_time',t);
+  updateNotifPreview(t);scheduleAllNotifs();
+  toast('Reminders: '+getThreeTimes(t).join(' · '));
+}
+
+function updateNotifPreview(base){
+  var times=getThreeTimes(base);
+  document.getElementById('notif-time-label').textContent='Daily at '+times[0];
+  document.getElementById('notif-times-preview').textContent=times.join(' · ');
+}
+
+function getThreeTimes(base){
+  var parts=base.split(':'),h=parseInt(parts[0]),m=parseInt(parts[1]);
+  return[0,5,10].map(function(offset){var total=(h*60+m+offset*60)%(24*60);return('0'+Math.floor(total/60)).slice(-2)+':'+('0'+(total%60)).slice(-2);});
+}
+
+window._notifTimers=[];
+function clearAllNotifTimers(){window._notifTimers.forEach(function(t){clearTimeout(t);});window._notifTimers=[];}
+
+function scheduleAllNotifs(){
+  if(localStorage.getItem('rem_notif')!=='1')return;
+  clearAllNotifTimers();
+  var base=localStorage.getItem('rem_notif_time')||'08:00';
+  getThreeTimes(base).forEach(function(t,i){
+    var parts=t.split(':'),h=parseInt(parts[0]),m=parseInt(parts[1]);
+    var now=new Date(),next=new Date();next.setHours(h,m,0,0);
+    if(next<=now)next.setDate(next.getDate()+1);
+    var timer=setTimeout(function(){fireNotif(i+1);scheduleAllNotifs();},next-now);
+    window._notifTimers.push(timer);
+  });
+}
+
+function fireNotif(which){
+  if(Notification.permission!=='granted')return;
+  var today=todayStr();
+  var due=localData.topics.filter(function(t){var n=getNextDue(t);return n&&n<=today;});
+  var undone=due.filter(function(t){return!(t.completedDates&&t.completedDates.includes(today));});
+  if(undone.length===0)return;
+  var totalPts=undone.reduce(function(s,t){return s+t.pts;},0);
+  var topicList=undone.slice(0,3).map(function(t){return t.name;}).join(', ')+(undone.length>3?' +'+(undone.length-3)+' more':'');
+  new Notification('rem',{body:undone.length+' topic'+(undone.length>1?'s':'')+' due · '+totalPts+' pts waiting\n'+topicList,icon:'./icon-192.png',tag:'rem-reminder-'+which});
+}
+
+function sendTestNotification(){
+  if(Notification.permission!=='granted'){
+    Notification.requestPermission().then(function(perm){
+      if(perm==='granted'){doSendTest();}
+      else{toast('Allow notifications first');}
+    });
+    return;
+  }
+  doSendTest();
+}
+
+function doSendTest(){
+  var today=todayStr();
+  var due=localData.topics.filter(function(t){var n=getNextDue(t);return n&&n<=today;});
+  var undone=due.filter(function(t){return!(t.completedDates&&t.completedDates.includes(today));});
+  var body,totalPts;
+  if(undone.length>0){
+    totalPts=undone.reduce(function(s,t){return s+t.pts;},0);
+    var topicList=undone.slice(0,3).map(function(t){return t.name;}).join(', ')+(undone.length>3?' +'+(undone.length-3)+' more':'');
+    body=undone.length+' topic'+(undone.length>1?'s':'')+' due today · '+totalPts+' pts waiting\n'+topicList;
+  }else{
+    body='All caught up! No topics due today.';
+  }
+  new Notification('rem',{body:body,icon:'./icon-192.png',tag:'rem-test'});
+  toast('Test notification sent!');
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('main-nav').addEventListener('click',function(e){
+    var btn=e.target.closest('button');
+    if(btn&&btn.dataset.tab)switchTab(btn.dataset.tab);
+  });
+  document.getElementById('login-btn').addEventListener('click',doLogin);
+  document.getElementById('login-name').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+  document.getElementById('add-btn').addEventListener('click',addTopic);
+  document.getElementById('signout-btn').addEventListener('click',signOut);
+  document.getElementById('notif-toggle').addEventListener('click',toggleNotif);
+  document.getElementById('notif-time').addEventListener('change',saveNotifTime);
+  document.getElementById('test-notif-btn').addEventListener('click',sendTestNotification);
+
+  localData=loadLocal();
+  var savedName=localStorage.getItem('rem_username');
+  if(savedName){myName=savedName;document.getElementById('login-name').value=savedName;showApp();}
+});
+</script>
+</body>
+</html>
